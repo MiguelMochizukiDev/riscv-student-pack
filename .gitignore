@@ -1,0 +1,60 @@
+# ==============================
+# Object and executable files
+# ==============================
+
+*.o
+*.obj
+*.elf
+*.out
+*.exe
+*.bin
+*.hex
+*.a
+*.so
+*.dll
+*.dylib
+
+# ==============================
+# VS Code artifacts
+# ==============================
+
+.vscode/
+*.code-workspace
+
+# ==============================
+# Build artifacts
+# ==============================
+
+build/
+dist/
+out/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+compile_commands.json
+
+# ==============================
+# Logs and temp files
+# ==============================
+
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ==============================
+# OS-specific files
+# ==============================
+
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Debug / profiling
+# ==============================
+
+*.gdb
+*.dSYM/
