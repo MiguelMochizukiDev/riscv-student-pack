@@ -8,6 +8,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 class CPU {
@@ -16,11 +17,11 @@ class CPU {
 	std::array<uint32_t, 32> regs;
 	Memory &memory;
 	bool running;
-	std::vector<InstructionHandler *> handlers;
+
+	std::vector<std::unique_ptr<InstructionHandler>> handlers;
 
 	uint32_t fetch();
 	void decodeExecute(uint32_t instr);
-
 	void commit(uint32_t next_pc);
 
       public:
@@ -46,7 +47,7 @@ class CPU {
 
 	void dumpRegisters() const;
 
-	void registerHandler(InstructionHandler *h);
+	void registerHandler(std::unique_ptr<InstructionHandler> handler);
 };
 
 #endif

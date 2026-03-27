@@ -13,45 +13,30 @@ CPU::CPU(Memory &mem) : memory(mem) {
 void CPU::init() {
 	pc = 0;
 	regs.fill(0);
-	Memory memory;
-	regs[2] = memory.getSize() - 4;
+	regs[2] = static_cast<uint32_t>(memory.getSize()) - 4;
 	running = true;
 }
 
 /* ================= INTERFACE ================= */
 
-bool CPU::isRunning() const {
-	return running;
-}
+bool CPU::isRunning() const { return running; }
 
-uint32_t CPU::getPC() const {
-	return pc;
-}
+uint32_t CPU::getPC() const { return pc; }
 
-void CPU::setPC(uint32_t value) {
-	pc = value;
-}
+void CPU::setPC(uint32_t value) { pc = value; }
 
-uint32_t CPU::getReg(int i) const {
-	return regs[i];
-}
+uint32_t CPU::getReg(int i) const { return regs[i]; }
 
 void CPU::setReg(int i, uint32_t value) {
 	if (i != 0)
 		regs[i] = value;
 }
 
-void CPU::setRunning(bool state) {
-	running = state;
-}
+void CPU::setRunning(bool state) { running = state; }
 
-Memory &CPU::getMemory() {
-	return memory;
-}
+Memory &CPU::getMemory() { return memory; }
 
-const Memory &CPU::getMemory() const {
-	return memory;
-}
+const Memory &CPU::getMemory() const { return memory; }
 
 void CPU::writeMemory(uint32_t addr, const uint8_t *data, size_t size) {
 	if (addr + size > memory.getSize()) {
@@ -70,13 +55,12 @@ void CPU::zeroMemory(uint32_t addr, size_t size) {
 }
 
 void CPU::dumpRegisters() const {
-	for (int i = 0; i < 32; i++) {
+	for (int i = 0; i < 32; i++)
 		printf("x%d: 0x%08X\n", i, regs[i]);
-	}
 }
 
-void CPU::registerHandler(InstructionHandler *h) {
-	handlers.push_back(h);
+void CPU::registerHandler(std::unique_ptr<InstructionHandler> handler) {
+	handlers.push_back(std::move(handler));
 }
 
 /* ================= CORE ================= */
@@ -89,11 +73,8 @@ void CPU::step() {
 /* ================= FETCH ================= */
 
 uint32_t CPU::fetch() {
-	uint32_t instr =
-	    memory.load32(pc);
-
+	uint32_t instr = memory.load32(pc);
 	printf("PC: 0x%08X | INSTR: 0x%08X\n", pc, instr);
-
 	return instr;
 }
 
@@ -103,7 +84,7 @@ void CPU::decodeExecute(uint32_t instr) {
 	uint32_t next_pc = pc + 4;
 
 	bool executed = false;
-	for (auto handler : handlers) {
+	for (auto &handler : handlers) {
 		if (handler->handle(*this, instr, next_pc)) {
 			executed = true;
 			break;

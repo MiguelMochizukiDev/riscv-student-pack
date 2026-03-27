@@ -1,9 +1,10 @@
-/* main.cpp*/
+/* main.cpp */
 
 #include "../include/cpu.hpp"
 #include "../include/elf.hpp"
 #include "../include/rv32i_handler.hpp"
 #include <iostream>
+#include <memory>
 
 int main(int argc, char **argv) {
 	if (argc < 2) {
@@ -15,18 +16,16 @@ int main(int argc, char **argv) {
 	CPU cpu(memory);
 	ELFLoader loader;
 
-	RV32IHandler rv32i;
-	cpu.registerHandler(&rv32i);
+	cpu.registerHandler(std::make_unique<RV32IHandler>());
 
 	if (!loader.load(argv[1], cpu))
 		return 1;
 
-	std::cout << "Program loaded. Entry point: 0x" << std::hex << cpu.getPC()
-		  << "\n";
+	std::cout << "Program loaded. Entry point: 0x" << std::hex
+		  << cpu.getPC() << "\n";
 
-	while (cpu.isRunning()) {
+	while (cpu.isRunning())
 		cpu.step();
-	}
 
 	std::cout << "\nFinal registers:\n";
 	cpu.dumpRegisters();
