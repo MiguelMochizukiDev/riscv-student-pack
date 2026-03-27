@@ -109,7 +109,7 @@ bool RV32IHandler::handleIType(CPU &cpu, uint32_t instr, uint32_t &) {
 		cpu.setReg(rd, cpu.getReg(rs1) << (imm & 0x1F));
 		break;
 	case 0x5:
-		if ((imm >> 10) & 1)
+		if ((imm >> 30) & 1)
 			cpu.setReg(rd, int32_t(cpu.getReg(rs1)) >> (imm & 0x1F));
 		else
 			cpu.setReg(rd, cpu.getReg(rs1) >> (imm & 0x1F));
