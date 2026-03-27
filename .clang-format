@@ -1,0 +1,5 @@
+BasedOnStyle: LLVM
+IndentWidth: 8      # largura "conceitual" de indentação (não usada se UseTab=Always)
+UseTab: Always      # força tabs reais
+TabWidth: 8         # largura visual de cada tab
+ColumnLimit: 0      # sem limite de colunas
