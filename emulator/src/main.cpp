@@ -1,7 +1,6 @@
 /* main.cpp */
 
-#include "../include/cpu.hpp"
-#include "../include/elf.hpp"
+#include "../include/emulator.hpp"
 #include "../include/rv32i_handler.hpp"
 #include <iostream>
 #include <memory>
@@ -12,22 +11,18 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	Memory memory;
-	CPU cpu(memory);
-	ELFLoader loader;
+	Emulator emu;
+	emu.registerHandler(std::make_unique<RV32IHandler>());
 
-	cpu.registerHandler(std::make_unique<RV32IHandler>());
-
-	if (!loader.load(argv[1], cpu))
+	if (!emu.loadELF(argv[1]))
 		return 1;
 
 	std::cout << "Program loaded. Entry point: 0x" << std::hex
-		  << cpu.getPC() << "\n";
+		  << emu.getCPU().getPC() << "\n";
 
-	while (cpu.isRunning())
-		cpu.step();
+	emu.run();
 
 	std::cout << "\nFinal registers:\n";
-	cpu.dumpRegisters();
+	emu.dumpRegisters();
 	return 0;
 }
