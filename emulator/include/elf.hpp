@@ -1,7 +1,4 @@
-/* elf.hpp */
-
 #pragma once
-
 #include <cstdint>
 #include <string>
 
@@ -42,7 +39,36 @@ class ELFLoader {
 		uint32_t p_align;
 	};
 
+	struct Elf32_Shdr {
+		uint32_t sh_name;
+		uint32_t sh_type;
+		uint32_t sh_flags;
+		uint32_t sh_addr;
+		uint32_t sh_offset;
+		uint32_t sh_size;
+		uint32_t sh_link;
+		uint32_t sh_info;
+		uint32_t sh_addralign;
+		uint32_t sh_entsize;
+	};
+
+	struct Elf32_Sym {
+		uint32_t st_name;
+		uint32_t st_value;
+		uint32_t st_size;
+		uint8_t st_info;
+		uint8_t st_other;
+		uint16_t st_shndx;
+	};
+
 	static constexpr uint32_t PT_LOAD = 1;
+	static constexpr uint32_t SHT_SYMTAB = 2;
+	static constexpr uint32_t SHT_STRTAB = 3;
+
+	static constexpr uint16_t ET_EXEC = 2;
+	static constexpr uint16_t EM_RISCV = 0xF3;
 
 	bool validate(const Elf32_Ehdr &ehdr);
+	void loadSegments(std::ifstream &file, const Elf32_Ehdr &ehdr, CPU &cpu);
+	void resolveGlobalPointer(std::ifstream &file, const Elf32_Ehdr &ehdr, CPU &cpu);
 };
