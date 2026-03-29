@@ -13,7 +13,7 @@ CPU::CPU(Memory &mem) : memory(mem) {
 void CPU::init() {
 	pc = 0;
 	regs.fill(0);
-	regs[2] = static_cast<uint32_t>(memory.getSize()) - 4;
+	regs[2] = static_cast<uint32_t>(memory.getSize() - 1) & ~0xFu;
 	running = true;
 }
 
