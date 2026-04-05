@@ -1,112 +1,155 @@
-# RISC-V Student Pack - Prototype
+# RISC-V Student Pack
 
-Educational toolkit for learning RISC-V, written in modern C++17.
+Educational toolkit for learning RISC-V in modern C++17.
 
-The end goal is two complementary tools: an **ELF32 assembler** translating RV32IMAC assembly to binary, and an **emulator** executing those binaries. They are being built together so that the assembler's output is always a valid target for the emulator.
+This project builds two complementary tools in parallel:
 
-> **Status:** Work in progress. Only the emulator exists at this stage, implementing RV32I. The remaining extensions, the assembler, and the test suite are all planned.
+- an ELF32 assembler for RV32 assembly source
+- an emulator that executes produced ELF32 binaries
 
-## Target feature set
+The intent is a tight educational feedback loop: write assembly, assemble it, run it, inspect CPU state.
+
+> Status: work in progress. Current implementation is focused on RV32I. RV32M/RV32A/RV32C, richer directives, and formal tests are still in progress.
+
+## Current capabilities
+
+### Assembler (available)
+
+- Two-pass assembly with forward and backward label resolution
+- RV32I mnemonic encoding via handler abstraction
+- ELF32 executable output for the bundled emulator
+- Compatible output format (`ET_EXEC`, `EM_RISCV`, single `PT_LOAD` segment)
+
+### Emulator (available)
+
+- ELF32 loader with `PT_LOAD` segment mapping and entry-point boot
+- RV32I instruction decode and execute loop
+- 32 general-purpose registers (`x0`-`x31`)
+- Stack pointer initialized near top of emulated memory
+- Instruction trace output (`PC` and fetched instruction)
+- Register dump at program end
+- `ecall` and `ebreak` currently halt execution (no Linux syscall ABI yet)
+
+### In progress
+
+- RV32M, RV32A, RV32C support (assembler and emulator)
+- Pseudoinstructions and richer assembler directives
+- Linux ABI syscall handling
+- Structured tests (unit + integration)
+
+## Quick start
+
+Prerequisites:
+
+- Linux
+- CMake 3.10+
+- GCC 7+ or Clang 5+ with C++17 support
+
+Build both tools from the repository root:
+
+```bash
+cmake -S assembler -B assembler/build
+cmake --build assembler/build
+
+cmake -S emulator -B emulator/build
+cmake --build emulator/build
+```
+
+Assemble a program:
+
+```bash
+./assembler/build/riscv_assembler input.s output.elf
+```
+
+Run it in the emulator:
+
+```bash
+./emulator/build/riscv_emulator output.elf
+```
+
+## CLI reference
+
+Assembler:
+
+```text
+riscv_assembler <input.s> <output.elf>
+```
+
+Emulator:
+
+```text
+riscv_emulator <elf>
+```
+
+## Feature roadmap
 
 ### Emulator
 
-- [x] **RV32I** - base integer instruction set
-- [ ] **RV32M** - multiply and divide instructions
-- [ ] **RV32A** - atomic memory operations
-- [ ] **RV32C** - compressed (16-bit) instructions
-- [x] ELF32 loading (`PT_LOAD` segments, entry point)
-- [x] 32 general-purpose registers with ABI names
+- [x] RV32I execution
+- [ ] RV32M execution
+- [ ] RV32A execution
+- [ ] RV32C execution
+- [x] ELF32 input loading (`PT_LOAD`, entry point)
+- [x] Handler-based ISA dispatch (`InstructionHandler`)
+- [x] 32 general-purpose registers
 - [ ] Linux ABI syscalls (`exit`, `read`, `write`, `openat`, `close`, `fstat`, `brk`)
-- [ ] `--debug` flag for instruction-level tracing
-- [ ] Register dump and stack trace on error
+- [ ] Optional debug mode flag
+- [ ] Error-time register dump and stack trace
 
 ### Assembler
 
-- [ ] All RV32IMAC instructions
+- [x] RV32I encoding
+- [ ] RV32M encoding
+- [ ] RV32A encoding
+- [ ] RV32C encoding
+- [x] ELF32 executable output compatible with emulator
+- [x] Handler-based encoding (`MnemonicHandler`)
+- [x] Two-pass label resolution
 - [ ] Pseudoinstruction expansion
 - [ ] Section directives (`.text`, `.data`, `.bss`, `.rodata`)
 - [ ] Data directives (`.byte`, `.half`, `.word`, `.ascii`, `.asciiz`, `.space`)
-- [ ] Forward and backward label resolution (two-pass)
-- [ ] ELF32 binary output compatible with the emulator
-- [ ] `--debug` flag for assembly diagnostics
+- [ ] Optional assembly diagnostics flag
 
 ### Testing
 
-- [ ] Unit tests for each ISA extension
-- [ ] Unit tests for assembler components
-- [ ] Integration tests (assemble -> emulate end-to-end)
+- [ ] Unit tests per ISA extension
+- [ ] Unit tests for assembler pipeline components
+- [ ] End-to-end assemble then emulate integration tests
 
-## What it does right now
+## Architecture notes
 
-Loads a 32-bit ELF binary into a flat 1 MiB memory space and runs it through a fetch-decode-execute loop implementing **RV32I**.
+- Emulator instruction execution is decoupled behind `InstructionHandler`, enabling ISA extensions as pluggable handlers.
+- Assembler encoding is decoupled behind `MnemonicHandler`, allowing extension-specific encoders.
+- This symmetry is intentional so assembler output and emulator support can evolve together.
 
-- ELF loading (`PT_LOAD` segments, entry point extraction)
-- 32 general-purpose registers (`x0`-`x31`)
-- Stack pointer initialized to top of memory
-- Full RV32I instruction decoding and execution
-- `ecall`/`ebreak` halt the emulator (no syscall handling yet)
-- Register dump on exit
-- Bounds-checked memory (throws on out-of-range access)
+## Project layout
 
-## Project structure
-
-```
-riscv-student-pack
-├── emulator
-│   ├── CMakeLists.txt
-│   ├── include
-│   │   ├── cpu.hpp
-│   │   ├── elf.hpp
-│   │   ├── emulator.hpp
-│   │   ├── instruction_handler.hpp
-│   │   ├── memory.hpp
-│   │   └── rv32i_handler.hpp
-│   └── src
-│       ├── cpu.cpp
-│       ├── elf.cpp
-│       ├── emulator.cpp
-│       ├── main.cpp
-│       ├── memory.cpp
-│       └── rv32i_handler.cpp
+```text
+riscv-student-pack/
+├── assembler/
+│   ├── include/
+│   ├── src/
+│   └── CMakeLists.txt
+├── emulator/
+│   ├── include/
+│   ├── src/
+│   └── CMakeLists.txt
+├── docs/
 ├── LICENSE
 └── README.md
 ```
 
-The ISA decoding is isolated behind an `InstructionHandler` interface - each extension (M, A, C) will be added as a separate handler without touching the core fetch-execute loop.
+## Diagrams
 
-## Building
+Architecture diagrams are available in the `docs` directory:
 
-Requires a C++17-capable compiler (GCC 7+ or Clang 5+) and CMake 3.10+.
+- `docs/riscv_student_pack_assembler.png`
+- `docs/riscv_student_pack_emulator.png`
+- `docs/riscv_student_pack_full.png`
 
-```bash
-cd emulator
-cmake -S . -B build
-cmake --build build
-```
+## Known limitations
 
-The binary is at `build/riscv_emulator`.
-
-## Usage
-
-```bash
-./build/riscv_emulator <elf-binary>
-```
-
-The emulator prints each fetched instruction and its PC, then dumps all registers at exit. To produce a compatible ELF binary right now you need an external cross-compiler toolchain, e.g.:
-
-```bash
-riscv32-unknown-elf-gcc -nostdlib -march=rv32imac -mabi=ilp32 -o program.elf program.s
-```
-
-Once the assembler is implemented, that step will be replaced by:
-
-```bash
-./riscv_assembler program.s program.elf
-./build/riscv_emulator program.elf
-```
-
-## Requirements
-
-- GCC or Clang with C++17 support
-- CMake >= 3.10
-- Linux (untested elsewhere)
+- No Linux syscall emulation yet; `ecall` halts execution.
+- No compressed (`C`) or multiply/divide (`M`) instruction support yet.
+- Formal automated tests are not complete yet.
+- Development and validation are currently Linux-centric.
