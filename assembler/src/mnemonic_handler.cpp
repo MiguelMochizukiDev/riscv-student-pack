@@ -28,8 +28,8 @@ static uint32_t encodeBType(int32_t imm, uint32_t rs2, uint32_t rs1, uint32_t fu
 }
 
 static uint32_t encodeUType(int32_t imm, uint32_t rd, uint32_t opcode) {
-	uint32_t uimm = static_cast<uint32_t>(imm) & 0xFFFFF000;
-	return uimm | (rd << 7) | opcode;
+	uint32_t uimm = static_cast<uint32_t>(imm) & 0xFFFFF;
+	return (uimm << 12) | (rd << 7) | opcode;
 }
 
 static uint32_t encodeJType(int32_t imm, uint32_t rd, uint32_t opcode) {
@@ -290,9 +290,16 @@ bool RV32IMnemonicHandler::handle(const InstructionNode &instruction, const Enco
 	}
 
 	if (mnemonic == "jal") {
-		requireOperandCount(instruction, 2);
-		int rd = operandAsRegister(instruction.operands[0], mnemonic, instruction.line);
-		int32_t target = operandAsImmediate(instruction.operands[1], mnemonic, instruction.line, context.resolver);
+		int rd = 1;
+		int32_t target = 0;
+		if (instruction.operands.size() == 1) {
+			target = operandAsImmediate(instruction.operands[0], mnemonic, instruction.line, context.resolver);
+		} else if (instruction.operands.size() == 2) {
+			rd = operandAsRegister(instruction.operands[0], mnemonic, instruction.line);
+			target = operandAsImmediate(instruction.operands[1], mnemonic, instruction.line, context.resolver);
+		} else {
+			throw std::runtime_error("Instruction 'jal' expects 1 or 2 operands (line " + std::to_string(instruction.line) + ")");
+		}
 		int32_t offset = target - static_cast<int32_t>(context.currentAddress);
 		if ((offset & 1) != 0)
 			throw std::runtime_error("jal target must be 2-byte aligned at line " + std::to_string(instruction.line));

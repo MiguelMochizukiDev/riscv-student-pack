@@ -147,9 +147,20 @@ std::vector<SourceLine> Lexer::tokenize(const std::string &source) const {
 			continue;
 		}
 
+		if (c == '+' || c == '-') {
+			if (!current.empty() && isIdentifierChar(current.back())) {
+				flushToken(line);
+			}
+			if (current.empty()) {
+				tokenStart = column;
+				current.push_back(c);
+				column++;
+				continue;
+			}
+		}
 		if (current.empty())
 			tokenStart = column;
-		if (!isIdentifierChar(c) && c != '+' && c != '-')
+		if (!isIdentifierChar(c))
 			throw std::runtime_error("Unexpected character in input at line " + std::to_string(line));
 		current.push_back(c);
 		column++;

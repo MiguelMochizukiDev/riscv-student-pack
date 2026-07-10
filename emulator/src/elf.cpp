@@ -1,5 +1,6 @@
 #include "../include/elf.hpp"
 #include "../include/cpu.hpp"
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <vector>

@@ -109,7 +109,7 @@ bool RV32IHandler::handleIType(CPU &cpu, uint32_t instr, uint32_t &) {
 		cpu.setReg(rd, cpu.getReg(rs1) << (imm & 0x1F));
 		break;
 	case 0x5:
-		if ((imm >> 30) & 1)
+		if ((instr >> 30) & 1)
 			cpu.setReg(rd, int32_t(cpu.getReg(rs1)) >> (imm & 0x1F));
 		else
 			cpu.setReg(rd, cpu.getReg(rs1) >> (imm & 0x1F));
@@ -143,6 +143,8 @@ bool RV32IHandler::handleLoad(CPU &cpu, uint32_t instr, uint32_t &) {
 	case 0x5:
 		cpu.setReg(rd, cpu.getMemory().load16(addr));
 		break;
+	default:
+		return false;
 	}
 	return true;
 }
@@ -165,6 +167,8 @@ bool RV32IHandler::handleStore(CPU &cpu, uint32_t instr, uint32_t &) {
 	case 0x2:
 		cpu.getMemory().store32(addr, cpu.getReg(rs2));
 		break;
+	default:
+		return false;
 	}
 	return true;
 }
